@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "farm-system.fullname" . }}-backend
+  labels:
+    {{- include "farm-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: {{ .Values.service.backend.type }}
+  ports:
+    - port: {{ .Values.service.backend.port }}
+      targetPort: {{ .Values.service.backend.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "farm-system.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "farm-system.fullname" . }}-frontend
+  labels:
+    {{- include "farm-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: {{ .Values.service.frontend.type }}
+  ports:
+    - port: {{ .Values.service.frontend.port }}
+      targetPort: {{ .Values.service.frontend.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "farm-system.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend

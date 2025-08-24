@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Test MongoDB Database
+  mongodb-test:
+    image: mongo:7.0
+    container_name: farm-mongodb-test
+    restart: "no"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testuser
+      MONGO_INITDB_ROOT_PASSWORD: testpass123
+      MONGO_INITDB_DATABASE: farm_system_test
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./scripts/mongo-init-test.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - farm-test-network
+    command: mongod --quiet --logpath /dev/null
+
+  # Test Redis Cache
+  redis-test:
+    image: redis:7.2-alpine
+    container_name: farm-redis-test
+    restart: "no"
+    command: redis-server --appendonly no --save "" --requirepass testredis123
+    ports:
+      - "6380:6379"
+    networks:
+      - farm-test-network
+
+  # Backend for Testing
+  backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: farm-backend-test
+    restart: "no"
+    environment:
+      NODE_ENV: test
+      PORT: 3000
+      MONGODB_URI: mongodb://testuser:testpass123@mongodb-test:27017/farm_system_test?authSource=admin
+      REDIS_URL: redis://:testredis123@redis-test:6379
+      JWT_SECRET: test-jwt-secret-key-for-testing-only
+      JWT_REFRESH_SECRET: test-refresh-secret-key
+      LOG_LEVEL: error
+      DISABLE_LOGGING: true
+    ports:
+      - "3002:3000"
+    depends_on:
+      - mongodb-test
+      - redis-test
+    networks:
+      - farm-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Frontend for Testing
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: farm-frontend-test
+    restart: "no"
+    environment:
+      REACT_APP_API_URL: http://backend-test:3000/api
+      REACT_APP_SOCKET_URL: http://backend-test:3000
+      NODE_ENV: test
+    ports:
+      - "3003:3000"
+    depends_on:
+      - backend-test
+    networks:
+      - farm-test-network
+
+  # Test Runner Container
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: farm-test-runner
+    restart: "no"
+    environment:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://testuser:testpass123@mongodb-test:27017/farm_system_test?authSource=admin
+      REDIS_URL: redis://:testredis123@redis-test:6379
+      JWT_SECRET: test-jwt-secret-key-for-testing-only
+      API_BASE_URL: http://backend-test:3000/api
+      FRONTEND_URL: http://frontend-test:3000
+    volumes:
+      - ./src:/app/src:ro
+      - ./test:/app/test:ro
+      - ./coverage:/app/coverage
+      - ./test-results:/app/test-results
+    depends_on:
+      - backend-test
+      - frontend-test
+    networks:
+      - farm-test-network
+    command: >
+      sh -c "
+        echo 'Waiting for services to be ready...' &&
+        sleep 30 &&
+        echo 'Running integration tests...' &&
+        npm run test:integration &&
+        echo 'Running E2E tests...' &&
+        npm run test:e2e
+      "
+
+networks:
+  farm-test-network:
+    driver: bridge

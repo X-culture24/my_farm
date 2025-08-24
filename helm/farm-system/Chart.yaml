@@ -1,0 +1,27 @@
+apiVersion: v2
+name: farm-system
+description: A Helm chart for Farm Management System
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - farm
+  - agriculture
+  - management
+  - nodejs
+  - react
+home: https://github.com/farm-system/farm-management
+sources:
+  - https://github.com/farm-system/farm-management
+maintainers:
+  - name: Farm System Team
+    email: devops@farm-system.com
+dependencies:
+  - name: mongodb
+    version: "13.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: mongodb.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

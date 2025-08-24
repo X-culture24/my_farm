@@ -67,28 +67,33 @@ Vagrant.configure("2") do |config|
     apt-get update
     apt-get install -y docker-ce docker-ce-cli containerd.io
     
-    # Install Node.js 18.x
-    echo "Installing Node.js 18.x..."
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    # Install Node.js 20.x (LTS)
+    echo "Installing Node.js 20.x..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
     
-    # Install Yarn
+    # Install Yarn (modern version)
     echo "Installing Yarn..."
-    npm install -g yarn
+    corepack enable
+    npm install -g yarn@latest
     
     # Install PM2 globally
     echo "Installing PM2..."
-    npm install -g pm2
+    npm install -g pm2@latest
+    
+    # Install pnpm for faster package management
+    echo "Installing pnpm..."
+    npm install -g pnpm@latest
     
     # Install Docker Compose
     echo "Installing Docker Compose..."
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     
-    # Install MongoDB
-    echo "Installing MongoDB..."
-    wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+    # Install MongoDB 7.0
+    echo "Installing MongoDB 7.0..."
+    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
     apt-get update
     apt-get install -y mongodb-org mongodb-mongosh mongodb-database-tools
     
@@ -145,19 +150,70 @@ Vagrant.configure("2") do |config|
     # Add vagrant user to docker group
     usermod -aG docker vagrant
     
+    # Install additional DevOps tools
+    echo "Installing additional DevOps tools..."
+    
+    # Install Terraform
+    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com focal main" | tee /etc/apt/sources.list.d/hashicorp.list
+    apt-get update && apt-get install -y terraform
+    
+    # Install Ansible
+    apt-get install -y ansible
+    
+    # Install SonarQube Scanner
+    wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+    unzip sonar-scanner-cli-4.8.0.2856-linux.zip -d /opt/
+    ln -s /opt/sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner /usr/local/bin/sonar-scanner
+    rm sonar-scanner-cli-4.8.0.2856-linux.zip
+    
     # Create application directories
     echo "Creating application directories..."
-    mkdir -p /opt/farm-management/{backend,frontend,logs,scripts,tests}
-    mkdir -p /opt/farm-management/backup
-    mkdir -p /opt/farm-management/monitoring
+    mkdir -p /opt/farm-management/{backend,frontend,logs,scripts,tests,monitoring,backup}
+    mkdir -p /opt/farm-management/k8s/{staging,production}
+    mkdir -p /opt/farm-management/helm
+    mkdir -p /var/log/farm-management
     
     # Set proper permissions
     chown -R vagrant:vagrant /opt/farm-management
+    chown -R vagrant:vagrant /var/log/farm-management
+    
+    # Setup development environment
+    echo "Setting up development environment..."
+    
+    # Create useful aliases
+    cat >> /home/vagrant/.bashrc << 'EOF'
+
+# Farm Management System aliases
+alias fm-logs='tail -f /var/log/farm-management/*.log'
+alias fm-start='cd /vagrant && npm run dev'
+alias fm-test='cd /vagrant && npm test'
+alias fm-build='cd /vagrant && npm run build'
+alias fm-docker='cd /vagrant && docker-compose up -d'
+alias k='kubectl'
+alias h='helm'
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline'
+
+EOF
     
     # Get Jenkins initial admin password
+    echo "==================================="
     echo "Jenkins initial admin password:"
-    cat /var/lib/jenkins/secrets/initialAdminPassword
+    cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "Jenkins not yet initialized"
+    echo "==================================="
+    echo "Access URLs:"
+    echo "Jenkins: http://192.168.56.10:8080"
+    echo "Application: http://192.168.56.10:3000"
+    echo "MongoDB: mongodb://192.168.56.10:27017"
+    echo "Redis: redis://192.168.56.10:6379"
+    echo "==================================="
     
-    echo "Basic provisioning completed!"
+    echo "✅ Farm Management Development Environment Ready!"
   SHELL
 end
