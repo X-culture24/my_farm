@@ -4,46 +4,49 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api
 
 export interface AnimalProduct {
   _id: string;
-  farmId: string;
-  productType: 'milk' | 'eggs' | 'meat' | 'wool' | 'honey' | 'other';
+  farm: string;
+  livestock?: string;
+  productType: 'milk' | 'eggs' | 'meat' | 'wool' | 'honey' | 'cheese' | 'yogurt' | 'butter' | 'other';
   name: string;
   description: string;
   quantity: {
+    amount: number;
+    unit: 'kg' | 'lbs' | 'liters' | 'gallons' | 'pieces' | 'dozens';
+  };
+  quality: {
+    grade: 'A' | 'B' | 'C' | 'premium' | 'standard' | 'economy';
+    certification: string[];
+    inspectionDate: string;
+    inspector: string;
+  };
+  production: {
+    date: string;
+    batchNumber: string;
+    processingMethod: string;
+    expiryDate: string;
+    storageConditions: string;
+  };
+  pricing: {
+    costPrice: number;
+    sellingPrice: number;
+    currency: string;
+    marketPrice: number;
+    lastUpdated: string;
+  };
+  inventory: {
     available: number;
     reserved: number;
     sold: number;
-    unit: string;
-  };
-  quality: {
-    grade: 'A' | 'B' | 'C' | 'D';
-    certification: string[];
-    organic: boolean;
-  };
-  production: {
-    batchNumber: string;
-    productionDate: string;
-    expiryDate: string;
-    harvestDate?: string;
-  };
-  pricing: {
-    unitPrice: number;
-    currency: string;
-    bulkDiscount: boolean;
-    discountPercentage?: number;
-  };
-  inventory: {
-    minStock: number;
+    minimumStock: number;
     reorderPoint: number;
-    supplier?: string;
-    lastRestocked?: string;
   };
   sales: {
     totalSold: number;
     totalRevenue: number;
-    averageRating: number;
-    reviewCount: number;
+    averagePrice: number;
+    lastSaleDate?: string;
   };
-  status: 'available' | 'low_stock' | 'out_of_stock' | 'discontinued';
+  status: 'available' | 'reserved' | 'sold' | 'expired' | 'recalled';
   images: string[];
   tags: string[];
   notes: string;
@@ -52,37 +55,43 @@ export interface AnimalProduct {
 }
 
 export interface CreateAnimalProductData {
-  farmId: string;
-  productType: 'milk' | 'eggs' | 'meat' | 'wool' | 'honey' | 'other';
+  farm: string;
+  livestock?: string;
+  productType: 'milk' | 'eggs' | 'meat' | 'wool' | 'honey' | 'cheese' | 'yogurt' | 'butter' | 'other';
   name: string;
   description: string;
   quantity: {
-    available: number;
-    unit: string;
+    amount: number;
+    unit: 'kg' | 'lbs' | 'liters' | 'gallons' | 'pieces' | 'dozens';
   };
   quality: {
-    grade: 'A' | 'B' | 'C' | 'D';
+    grade: 'A' | 'B' | 'C' | 'premium' | 'standard' | 'economy';
     certification: string[];
-    organic: boolean;
+    inspectionDate: string;
+    inspector: string;
   };
   production: {
+    date: string;
     batchNumber: string;
-    productionDate: string;
+    processingMethod: string;
     expiryDate: string;
-    harvestDate?: string;
+    storageConditions: string;
   };
   pricing: {
-    unitPrice: number;
+    costPrice: number;
+    sellingPrice: number;
     currency: string;
-    bulkDiscount: boolean;
-    discountPercentage?: number;
+    marketPrice?: number;
   };
   inventory: {
-    minStock: number;
+    available: number;
+    reserved?: number;
+    minimumStock: number;
     reorderPoint: number;
-    supplier?: string;
   };
-  tags: string[];
+  status: 'available' | 'reserved' | 'sold' | 'expired' | 'recalled';
+  images?: string[];
+  tags?: string[];
   notes?: string;
 }
 
@@ -99,7 +108,7 @@ class AnimalProductService {
 
   async getAnimalProducts(farmId?: string): Promise<AnimalProduct[]> {
     try {
-      const params = farmId ? { farmId } : {};
+      const params = farmId ? { farm: farmId } : {};
       const response = await axios.get(`${API_BASE_URL}/animal-products`, {
         headers: this.getAuthHeaders(),
         params,

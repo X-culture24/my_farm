@@ -4,10 +4,8 @@
 Vagrant.configure("2") do |config|
   # Use Ubuntu 20.04 LTS (Focal) as base image
   config.vm.box = "ubuntu/focal64"
-  config.vm.box_version = "20231025.0.0"
-  
-  # Disable automatic box update checking
-  config.vm.box_check_update = false
+  # Removed specific version constraint to use latest available
+  # config.vm.box_check_update = true  # Enabled by default
   
   # Set hostname
   config.vm.hostname = "farm-management-dev"
@@ -39,7 +37,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     # Update system
     echo "Updating system packages..."
-    apt-get update
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y
     apt-get upgrade -y
     
     # Install essential packages
@@ -59,30 +58,14 @@ Vagrant.configure("2") do |config|
       build-essential \
       python3 \
       python3-pip \
-      python3-venv \
-      nodejs \
-      npm \
-      docker.io \
-      docker-compose \
-      nginx \
-      redis-server \
-      mongodb \
-      supervisor \
-      cron \
-      logrotate \
-      fail2ban \
-      ufw
+      python3-venv
     
-    # Start and enable services
-    systemctl start docker
-    systemctl enable docker
-    systemctl start redis-server
-    systemctl enable redis-server
-    systemctl start mongodb
-    systemctl enable mongodb
-    
-    # Add vagrant user to docker group
-    usermod -aG docker vagrant
+    # Install Docker
+    echo "Installing Docker..."
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update
+    apt-get install -y docker-ce docker-ce-cli containerd.io
     
     # Install Node.js 18.x
     echo "Installing Node.js 18.x..."
@@ -102,39 +85,37 @@ Vagrant.configure("2") do |config|
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     
-    # Install MongoDB tools
-    echo "Installing MongoDB tools..."
+    # Install MongoDB
+    echo "Installing MongoDB..."
     wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
     echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
     apt-get update
-    apt-get install -y mongodb-mongosh mongodb-database-tools
+    apt-get install -y mongodb-org mongodb-mongosh mongodb-database-tools
+    
+    # Install Redis
+    echo "Installing Redis..."
+    apt-get install -y redis-server
+    
+    # Install Nginx
+    echo "Installing Nginx..."
+    apt-get install -y nginx
     
     # Install Jenkins
     echo "Installing Jenkins..."
-    wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | apt-key add -
-    echo "deb https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list
+    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
+    echo "deb [signed-by=/usr/share/keyrings/jenkins.gpg] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
     apt-get update
     apt-get install -y jenkins
-    
-    # Start and enable Jenkins
-    systemctl start jenkins
-    systemctl enable jenkins
-    
-    # Get Jenkins initial admin password
-    echo "Jenkins initial admin password:"
-    cat /var/lib/jenkins/secrets/initialAdminPassword
     
     # Install kubectl
     echo "Installing kubectl..."
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-    chmod +x kubectl
-    mv kubectl /usr/local/bin/
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     
     # Install Minikube
     echo "Installing Minikube..."
     curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-    chmod +x minikube-linux-amd64
-    mv minikube-linux-amd64 /usr/local/bin/minikube
+    install -o root -g root -m 0755 minikube-linux-amd64 /usr/local/bin/minikube
     
     # Install Helm
     echo "Installing Helm..."
@@ -145,7 +126,7 @@ Vagrant.configure("2") do |config|
     
     # Configure firewall
     echo "Configuring firewall..."
-    ufw allow 22/tcp
+    ufw allow OpenSSH
     ufw allow 80/tcp
     ufw allow 443/tcp
     ufw allow 3000/tcp
@@ -155,6 +136,15 @@ Vagrant.configure("2") do |config|
     ufw allow 6379/tcp
     ufw --force enable
     
+    # Start and enable services
+    systemctl enable --now docker
+    systemctl enable --now redis-server
+    systemctl enable --now mongod
+    systemctl enable --now jenkins
+    
+    # Add vagrant user to docker group
+    usermod -aG docker vagrant
+    
     # Create application directories
     echo "Creating application directories..."
     mkdir -p /opt/farm-management/{backend,frontend,logs,scripts,tests}
@@ -163,6 +153,10 @@ Vagrant.configure("2") do |config|
     
     # Set proper permissions
     chown -R vagrant:vagrant /opt/farm-management
+    
+    # Get Jenkins initial admin password
+    echo "Jenkins initial admin password:"
+    cat /var/lib/jenkins/secrets/initialAdminPassword
     
     echo "Basic provisioning completed!"
   SHELL

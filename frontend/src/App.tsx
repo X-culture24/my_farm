@@ -8,24 +8,26 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { HelmetProvider } from 'react-helmet-async';
 
 // Components
-import Layout from '@/components/Layout/Layout';
-import ProtectedRoute from '@/components/Auth/ProtectedRoute';
-import ErrorFallback from '@/components/ErrorBoundary/ErrorFallback';
+import Layout from './components/Layout/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import RoleBasedAccess from './components/RoleBasedAccess';
+import ErrorFallback from './components/ErrorBoundary/ErrorFallback';
 
 // Pages
-import Dashboard from '@/pages/Dashboard/Dashboard';
-import Farms from '@/pages/Farms/Farms';
-import Livestock from '@/pages/Livestock/Livestock';
-import AnimalProducts from '@/pages/AnimalProducts/AnimalProducts';
-import FarmProducts from '@/pages/FarmProducts/FarmProducts';
-import Sales from '@/pages/Sales/Sales';
-import Analytics from '@/pages/Analytics/Analytics';
-import Login from '@/pages/Auth/Login';
-import Register from '@/pages/Auth/Register';
-import Profile from '@/pages/Profile/Profile';
+import Landing from './pages/Landing/Landing';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Farms from './pages/Farms/Farms';
+import Livestock from './pages/Livestock/Livestock';
+import AnimalProducts from './pages/AnimalProducts/AnimalProducts';
+import FarmProducts from './pages/FarmProducts/FarmProducts';
+import Sales from './pages/Sales/Sales';
+import Analytics from './pages/Analytics/Analytics';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import Profile from './pages/Profile/Profile';
 
 // Store
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from './store/authStore';
 
 // Theme
 const theme = createTheme({
@@ -55,7 +57,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Poppins", "Helvetica", "Arial", sans-serif',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 600,
@@ -132,33 +134,64 @@ function App() {
             <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
               <Router>
                 <Routes>
+                  {/* Landing Page */}
+                  <Route path="/" element={<Landing />} />
+                  
                   {/* Public Routes */}
                   <Route path="/login" element={
-                    !isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />
+                    !isAuthenticated ? <Login /> : <Navigate to="/app/dashboard" replace />
                   } />
                   <Route path="/register" element={
-                    !isAuthenticated ? <Register /> : <Navigate to="/dashboard" replace />
+                    !isAuthenticated ? <Register /> : <Navigate to="/app/dashboard" replace />
                   } />
 
                   {/* Protected Routes */}
-                  <Route path="/" element={
+                  <Route path="/app" element={
                     <ProtectedRoute>
                       <Layout />
                     </ProtectedRoute>
                   }>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="farms" element={<Farms />} />
-                    <Route path="livestock" element={<Livestock />} />
-                    <Route path="animal-products" element={<AnimalProducts />} />
-                    <Route path="farm-products" element={<FarmProducts />} />
-                    <Route path="sales" element={<Sales />} />
-                    <Route path="analytics" element={<Analytics />} />
+                    <Route index element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="dashboard" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'analytics', action: 'read' }}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="farms" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'farms', action: 'read' }}>
+                        <Farms />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="livestock" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'livestock', action: 'read' }}>
+                        <Livestock />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="animal-products" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'products', action: 'read' }}>
+                        <AnimalProducts />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="farm-products" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'products', action: 'read' }}>
+                        <FarmProducts />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="sales" element={
+                      <ProtectedRoute requiredPermission={{ resource: 'sales', action: 'read' }}>
+                        <Sales />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="analytics" element={
+                      <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                        <Analytics />
+                      </ProtectedRoute>
+                    } />
                     <Route path="profile" element={<Profile />} />
                   </Route>
 
                   {/* Catch all route */}
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                 </Routes>
               </Router>
 

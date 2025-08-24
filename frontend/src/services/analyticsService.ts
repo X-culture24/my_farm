@@ -78,7 +78,7 @@ class AnalyticsService {
 
   async getSalesAnalytics(farmId?: string, period: string = 'month'): Promise<SalesAnalytics> {
     try {
-      const params = { period };
+      const params: any = { period };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/analytics/sales`, {
@@ -111,7 +111,7 @@ class AnalyticsService {
 
   async getLivestockAnalytics(farmId?: string, period: string = 'month'): Promise<any> {
     try {
-      const params = { period };
+      const params: any = { period };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/analytics/livestock`, {
@@ -129,7 +129,7 @@ class AnalyticsService {
 
   async getProductAnalytics(farmId?: string, period: string = 'month'): Promise<any> {
     try {
-      const params = { period };
+      const params: any = { period };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/analytics/products`, {
@@ -145,9 +145,9 @@ class AnalyticsService {
     }
   }
 
-  async getFinancialReport(farmId?: string, startDate: string, endDate: string): Promise<any> {
+  async getFinancialReport(startDate: string, endDate: string, farmId?: string): Promise<any> {
     try {
-      const params = { startDate, endDate };
+      const params: any = { startDate, endDate };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/analytics/financial`, {
@@ -165,7 +165,7 @@ class AnalyticsService {
 
   async exportReport(reportType: string, farmId?: string, period: string = 'month', format: 'pdf' | 'excel' = 'pdf'): Promise<Blob> {
     try {
-      const params = { reportType, period, format };
+      const params: any = { reportType, period, format };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/analytics/export`, {

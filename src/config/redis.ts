@@ -1,13 +1,13 @@
-import Redis from 'redis';
+import { createClient } from 'redis';
 import { logger } from '../utils/logger';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
-let redisClient: Redis.RedisClientType;
+let redisClient: any;
 
 export const connectRedis = async (): Promise<void> => {
   try {
-    redisClient = Redis.createClient({
+    redisClient = createClient({
       url: REDIS_URL,
       socket: {
         reconnectStrategy: (retries) => {
@@ -20,7 +20,7 @@ export const connectRedis = async (): Promise<void> => {
       }
     });
 
-    redisClient.on('error', (err) => {
+    redisClient.on('error', (err: any) => {
       logger.error('Redis Client Error:', err);
     });
 
@@ -48,7 +48,7 @@ export const connectRedis = async (): Promise<void> => {
   }
 };
 
-export const getRedisClient = (): Redis.RedisClientType => {
+export const getRedisClient = (): any => {
   if (!redisClient) {
     throw new Error('Redis client not initialized. Call connectRedis() first.');
   }
@@ -75,4 +75,4 @@ process.on('SIGINT', async () => {
   await disconnectRedis();
 });
 
-export default redisClient;
+export default getRedisClient;

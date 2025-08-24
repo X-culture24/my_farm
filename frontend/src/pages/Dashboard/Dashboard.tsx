@@ -6,7 +6,6 @@ import {
   CardContent,
   Typography,
   Button,
-  Paper,
   List,
   ListItem,
   ListItemText,
@@ -18,15 +17,14 @@ import {
   Agriculture,
   Pets,
   LocalDining,
-  Eco,
   ShoppingCart,
   TrendingUp,
   Notifications,
   Add,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { useAuthStore } from '@/store/authStore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useAuthStore } from '../../store/authStore';
 
 // Mock data for demonstration
 const salesData = [
@@ -92,7 +90,7 @@ const Dashboard: React.FC = () => {
       {/* Welcome Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Welcome back, {user?.firstName || 'Farmer'}! 👋
+          Welcome back, {user?.name || 'Farmer'}! 👋
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Here's what's happening on your farms today
@@ -110,7 +108,7 @@ const Dashboard: React.FC = () => {
                     Total Farms
                   </Typography>
                   <Typography variant="h4" component="div">
-                    {user?.farms?.length || 0}
+                    {user?.farmId ? 1 : 0}
                   </Typography>
                 </Box>
                 <Agriculture sx={{ fontSize: 40, color: 'primary.main' }} />

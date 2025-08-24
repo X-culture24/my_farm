@@ -69,7 +69,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to create sale',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -126,7 +126,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch sales',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -167,7 +167,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch sale',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -225,7 +225,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to update sale status',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -279,7 +279,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to add payment',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -402,7 +402,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch sales analytics',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -469,7 +469,7 @@ export class SalesController {
       res.status(500).json({
         success: false,
         message: 'Failed to cancel sale',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }

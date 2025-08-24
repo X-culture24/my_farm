@@ -50,6 +50,12 @@ export interface ISales extends Document {
   attachments: string[];
   createdAt: Date;
   updatedAt: Date;
+  addPayment(amount: number, method: string, transactionId?: string): Promise<ISales>;
+  updateStatus(newStatus: string): Promise<ISales>;
+}
+
+export interface ISalesModel extends mongoose.Model<ISales> {
+  generateOrderNumber(): string;
 }
 
 const salesSchema = new Schema<ISales>({
@@ -311,4 +317,4 @@ salesSchema.statics.generateOrderNumber = function() {
   return `ORD${year}${month}${day}${random}`;
 };
 
-export const Sales = mongoose.model<ISales>('Sales', salesSchema);
+export const Sales = mongoose.model<ISales, ISalesModel>('Sales', salesSchema);

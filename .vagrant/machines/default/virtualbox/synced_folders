@@ -1,0 +1,1 @@
+{"virtualbox":{"/vagrant":{"owner":"vagrant","group":"vagrant","mount_options":["dmode=755,fmode=644","uid=1000","gid=1000","_netdev"],"guestpath":"/vagrant","hostpath":"/home/lawrence/kca-demo2/DevOps Pro","disabled":false,"__vagrantfile":true}}}

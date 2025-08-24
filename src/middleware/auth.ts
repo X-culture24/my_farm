@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { logger } from '../utils/logger';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
 // Extend Express Request interface to include user
 declare global {
   namespace Express {
@@ -24,7 +26,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
     
     // Check if user still exists
     const user = await User.findById(decoded.userId).select('-password');
@@ -75,7 +77,7 @@ export const optionalAuthMiddleware = async (req: Request, res: Response, next: 
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
       const user = await User.findById(decoded.userId).select('-password');
       
       if (user && user.isActive) {
@@ -156,14 +158,14 @@ export const farmAccessMiddleware = async (req: Request, res: Response, next: Ne
 export const generateToken = (userId: string): string => {
   return jwt.sign(
     { userId },
-    process.env.JWT_SECRET || 'fallback-secret',
+    JWT_SECRET,
     { expiresIn: '24h' }
   );
 };
 
 export const verifyToken = (token: string): any => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    return jwt.verify(token, JWT_SECRET);
   } catch (error) {
     throw error;
   }

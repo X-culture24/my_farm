@@ -7,7 +7,6 @@ import {
   Button,
   Typography,
   Link,
-  Alert,
   CircularProgress,
   InputAdornment,
   IconButton,
@@ -21,8 +20,8 @@ import {
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { useAuthStore } from '@/store/authStore';
-import { authService } from '@/services/authService';
+import { useAuthStore } from '../../store/authStore';
+import { authService } from '../../services/authService';
 
 interface LoginFormData {
   email: string;
@@ -51,7 +50,7 @@ const Login: React.FC = () => {
       const response = await authService.login(data.email, data.password);
       
       if (response.success && response.data?.token) {
-        login(response.data.token);
+        login({ email: data.email, password: data.password });
         toast.success('Login successful!');
         navigate(from, { replace: true });
       } else {

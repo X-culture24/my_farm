@@ -40,19 +40,13 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3001",
-  credentials: true
-}));
-app.use(compression());
-app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
+// Basic middleware only for testing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Rate limiting
-app.use(rateLimiter);
+app.use(cors({
+  origin: "*",
+  credentials: false
+}));
 
 // Health check
 app.get('/health', (req, res) => {

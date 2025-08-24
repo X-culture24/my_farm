@@ -87,7 +87,7 @@ class SalesService {
     limit?: number;
   }): Promise<{ sales: Sales[]; total: number; page: number; totalPages: number }> {
     try {
-      const params = { ...filters };
+      const params: any = { ...filters };
       if (farmId) params.farmId = farmId;
       
       const response = await axios.get(`${API_BASE_URL}/sales`, {

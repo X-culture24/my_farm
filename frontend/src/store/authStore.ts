@@ -1,75 +1,54 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { jwtDecode } from 'jwt-decode';
-
-export interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'admin' | 'farmer' | 'worker' | 'viewer';
-  farms: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { User, UserRole, LoginCredentials, RegisterData } from '../types/auth';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
-}
-
-interface AuthActions {
-  login: (token: string) => void;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
-  setUser: (user: User) => void;
+  register: (userData: RegisterData) => Promise<void>;
   setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
 }
 
-type AuthStore = AuthState & AuthActions;
-
-export const useAuthStore = create<AuthStore>()(
+export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      // State
+    (set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
-      error: null,
 
-      // Actions
-      login: (token: string) => {
+      login: async (credentials: LoginCredentials) => {
         try {
-          const decoded = jwtDecode(token) as any;
-          const user: User = {
-            _id: decoded.userId,
-            firstName: decoded.firstName || 'User',
-            lastName: decoded.lastName || '',
-            email: decoded.email || '',
-            role: decoded.role || 'farmer',
-            farms: decoded.farms || [],
-            isActive: decoded.isActive !== false,
-            createdAt: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
-            updatedAt: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
+          set({ isLoading: true });
+
+          // Mock login - replace with actual API call
+          const mockUser: User = {
+            _id: '1',
+            email: credentials.email,
+            name: 'John Doe',
+            role: credentials.email.includes('admin') ? 'admin' :
+                  credentials.email.includes('manager') ? 'manager' : 'worker',
+            farmId: '1',
+            permissions: [],
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           };
+          const mockToken = 'mock-jwt-token';
 
           set({
-            user,
-            token,
+            user: mockUser,
+            token: mockToken,
             isAuthenticated: true,
-            error: null,
+            isLoading: false,
           });
         } catch (error) {
-          set({
-            error: 'Invalid token format',
-            isAuthenticated: false,
-          });
+          set({ isLoading: false });
+          throw new Error('Login failed');
         }
       },
 
@@ -78,24 +57,42 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           token: null,
           isAuthenticated: false,
-          error: null,
+          isLoading: false,
         });
       },
 
-      setUser: (user: User) => {
-        set({ user });
+      register: async (userData: RegisterData) => {
+        try {
+          set({ isLoading: true });
+
+          // Mock registration - replace with actual API call
+          const mockUser: User = {
+            _id: '2',
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            farmId: userData.farmId,
+            permissions: [],
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          const mockToken = 'mock-jwt-token';
+
+          set({
+            user: mockUser,
+            token: mockToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          throw new Error('Registration failed');
+        }
       },
 
-      setLoading: (isLoading: boolean) => {
-        set({ isLoading });
-      },
-
-      setError: (error: string | null) => {
-        set({ error });
-      },
-
-      clearError: () => {
-        set({ error: null });
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
       },
     }),
     {

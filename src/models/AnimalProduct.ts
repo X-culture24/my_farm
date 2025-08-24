@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAnimalProduct extends Document {
+  updateInventoryAfterSale(quantity: number, price: number): Promise<IAnimalProduct>;
   farm: mongoose.Types.ObjectId;
   livestock?: mongoose.Types.ObjectId;
   productType: 'milk' | 'eggs' | 'meat' | 'wool' | 'honey' | 'cheese' | 'yogurt' | 'butter' | 'other';

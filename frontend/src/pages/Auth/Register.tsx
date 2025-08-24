@@ -26,9 +26,10 @@ import {
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { authService } from '@/services/authService';
+import { authService } from '../../services/authService';
 
 interface RegisterFormData {
+  username: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -62,6 +63,7 @@ const Register: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await authService.register({
+        username: data.username,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -129,6 +131,33 @@ const Register: React.FC = () => {
 
         {/* Form */}
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
+          <TextField
+            {...register('username', {
+              required: 'Username is required',
+              minLength: {
+                value: 3,
+                message: 'Username must be at least 3 characters',
+              },
+              pattern: {
+                value: /^[a-zA-Z0-9_]+$/,
+                message: 'Username can only contain letters, numbers, and underscores',
+              },
+            })}
+            fullWidth
+            label="Username"
+            margin="normal"
+            error={!!errors.username}
+            helperText={errors.username?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Person color="action" />
+                </InputAdornment>
+              ),
+            }}
+            disabled={isLoading}
+          />
+
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField

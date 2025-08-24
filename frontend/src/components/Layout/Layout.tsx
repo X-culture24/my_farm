@@ -26,18 +26,17 @@ import {
   Agriculture,
   Pets,
   LocalDining,
-  Eco,
+  Nature,
   ShoppingCart,
   Analytics,
   Person,
   Notifications,
   Settings,
   Logout,
-  ChevronLeft,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useAuthStore } from '../../store/authStore';
+import { useNotificationStore } from '../../store/notificationStore';
 
 const drawerWidth = 280;
 
@@ -46,7 +45,7 @@ const menuItems = [
   { text: 'Farms', icon: <Agriculture />, path: '/farms' },
   { text: 'Livestock', icon: <Pets />, path: '/livestock' },
   { text: 'Animal Products', icon: <LocalDining />, path: '/animal-products' },
-  { text: 'Farm Products', icon: <Eco />, path: '/farm-products' },
+  { text: 'Farm Products', icon: <Nature />, path: '/farm-products' },
   { text: 'Sales', icon: <ShoppingCart />, path: '/sales' },
   { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
 ];
@@ -185,7 +184,7 @@ const Layout: React.FC = () => {
                   height: 40,
                 }}
               >
-                {user?.firstName?.charAt(0) || 'U'}
+                {user?.name?.charAt(0) || 'U'}
               </Avatar>
             </IconButton>
           </Box>
